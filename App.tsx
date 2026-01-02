@@ -8,7 +8,7 @@ import CodingLab from './components/CodingLab';
 import RecruiterPortal from './components/RecruiterPortal';
 import { storageService } from './services/storageService';
 import { UserProfile, InterviewSession as IInterviewSession, SUPPORTED_ROLES, InterviewType, UserRole, CompanyProfile, ExamConfig, LeaderboardEntry } from './types';
-import { Trophy, Briefcase, Zap, ShieldCheck, ArrowRight, User, Terminal, Loader2, Key, Mail, Lock, Building2, X } from 'lucide-react';
+import { Trophy, Briefcase, Zap, ShieldCheck, ArrowRight, User, Terminal, Loader2, Key, Mail, Lock, Building2, X, AlertCircle } from 'lucide-react';
 
 interface AuthPortalProps {
   role: UserRole;
@@ -23,14 +23,50 @@ const AuthPortal: React.FC<AuthPortalProps> = ({ role, authMode, setAuthMode, on
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
   const handleSubmit = () => {
+    setError(null);
+
+    if (authMode === 'signup' && !name.trim()) {
+      return setError("Full name is required to create an account.");
+    }
+
+    if (!email) {
+      return setError("Please enter your email address.");
+    }
+
+    if (!validateEmail(email)) {
+      return setError("Please enter a valid email address (e.g., name@domain.com).");
+    }
+
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return setError("Currently, only @gmail.com addresses are supported.");
+    }
+
+    if (password.length !== 10) {
+      return setError("Security policy: Password must be exactly 10 characters.");
+    }
+
     onAuth(role, email, password, name);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 animate-fadeIn">
       <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 max-w-md w-full">
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md">
+              <Zap size={24} fill="currentColor" />
+            </div>
+            <span className="text-2xl font-black text-indigo-600 tracking-tight">HirePulse</span>
+          </div>
+        </div>
+
         {examContext && (
           <div className="mb-8 p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center gap-4">
              {examContext.companyLogo ? (
@@ -55,6 +91,13 @@ const AuthPortal: React.FC<AuthPortalProps> = ({ role, authMode, setAuthMode, on
           <p className="text-slate-500 font-medium mt-1">{role === UserRole.RECRUITER ? 'Recruiter' : 'Candidate'} Suite</p>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 animate-fadeIn">
+            <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm font-bold text-red-600 leading-tight">{error}</p>
+          </div>
+        )}
+
         <div className="space-y-4">
           {authMode === 'signup' && (
             <div className="relative">
@@ -63,7 +106,7 @@ const AuthPortal: React.FC<AuthPortalProps> = ({ role, authMode, setAuthMode, on
                 type="text" 
                 placeholder="Full Name" 
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setError(null); }}
                 className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-indigo-600 outline-none font-bold text-slate-700"
               />
             </div>
@@ -72,9 +115,9 @@ const AuthPortal: React.FC<AuthPortalProps> = ({ role, authMode, setAuthMode, on
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="email" 
-              placeholder="Email (must be @gmail.com)" 
+              placeholder="Email (name@gmail.com)" 
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setError(null); }}
               className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-indigo-600 outline-none font-bold text-slate-700"
             />
           </div>
@@ -84,7 +127,7 @@ const AuthPortal: React.FC<AuthPortalProps> = ({ role, authMode, setAuthMode, on
               type="password" 
               placeholder="Password (10 characters)" 
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setError(null); }}
               className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-indigo-600 outline-none font-bold text-slate-700"
             />
           </div>
@@ -99,7 +142,7 @@ const AuthPortal: React.FC<AuthPortalProps> = ({ role, authMode, setAuthMode, on
 
         <div className="mt-8 text-center">
           <button 
-            onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+            onClick={() => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setError(null); }}
             className="text-slate-400 font-bold hover:text-indigo-600 transition-colors"
           >
             {authMode === 'login' ? "New here? Create account" : "Already have an account? Login"}
@@ -189,22 +232,11 @@ const App: React.FC = () => {
   };
 
   const handleAuth = async (role: UserRole, email: string, pass: string, name?: string) => {
-    if (!email || !pass) return alert("Please fill all fields.");
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return alert("Email must be a valid @gmail.com address.");
-    }
-    if (pass.length !== 10) {
-      return alert("Password must be exactly 10 characters long.");
-    }
-    if (authMode === 'signup' && !name) {
-      return alert("Please enter your full name.");
-    }
-
     const userEmail = email.toLowerCase();
 
     if (examMode.active && examMode.config?.invitedEmails) {
       if (!examMode.config.invitedEmails.includes(userEmail)) {
-        return alert("access denied");
+        return alert("Access Denied: You are not invited to this private assessment.");
       }
     }
 
@@ -233,7 +265,7 @@ const App: React.FC = () => {
       }
       setView('app');
     } catch (err) {
-      alert("Auth failed. Please try again.");
+      alert("Authentication failed. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +305,10 @@ const App: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600 mb-4" size={48} />
+        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mb-6 animate-pulse shadow-xl shadow-indigo-100">
+           <Zap size={32} fill="currentColor" />
+        </div>
+        <Loader2 className="animate-spin text-indigo-600 mb-4" size={32} />
         <p className="text-slate-500 font-bold tracking-widest uppercase text-xs">Syncing Cloud Workspace...</p>
       </div>
     );
@@ -283,11 +318,11 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 space-y-12 animate-fadeIn">
         <div className="text-center space-y-4 max-w-2xl">
-          <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white mx-auto shadow-2xl shadow-indigo-200">
-            <Zap size={40} fill="currentColor" />
+          <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white mx-auto shadow-2xl shadow-indigo-200 mb-6">
+            <Zap size={48} fill="currentColor" />
           </div>
           <h1 className="text-6xl font-black text-slate-900 tracking-tight">HirePulse</h1>
-          <p className="text-xl text-slate-400 font-medium">The Intelligent Hiring Operating System.</p>
+          <p className="text-xl text-slate-400 font-medium tracking-tight">The Intelligent Hiring Operating System.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">

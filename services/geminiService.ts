@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { InterviewType, Difficulty, Question, EvaluationResult, ResumeAnalysis, CodingChallenge } from "../types";
 
@@ -111,13 +112,16 @@ export const geminiService = {
   generateCodingChallenge: async (role: string): Promise<CodingChallenge> => {
     return callWithRetry(async () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Generate a coding challenge for a ${role}. Include title, difficulty, description, and starter code.`;
+      const prompt = `Generate a unique and challenging coding problem suitable for a ${role}. 
+      The problem should test algorithmic thinking, data structure knowledge, and code quality. 
+      Include title, difficulty (Easy, Medium, Hard), a clear description with constraints, and idiomatic starter code for Python, Java, and C++.`;
       
       try {
         const response: GenerateContentResponse = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3-pro-preview",
           contents: prompt,
           config: {
+            thinkingConfig: { thinkingBudget: 2000 },
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -156,16 +160,24 @@ export const geminiService = {
     return callWithRetry(async () => {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const prompt = `Evaluate the candidate's technical answer.
+        const prompt = `Act as a senior technical interviewer. Evaluate the candidate's response with high rigor.
         Question: "${question}"
         Candidate Answer: "${answer}"
         Category: ${type}.
-        If the category is APTITUDE, evaluate for mathematical accuracy and logical flow.`;
+        
+        Evaluation Criteria:
+        1. Accuracy: Is the technical information correct?
+        2. Depth: Does the candidate show deep understanding or just surface-level knowledge?
+        3. Communication: Is the answer structured and professional?
+        
+        Provide a detailed feedback string, specific strengths/weaknesses, and a score (0-100).
+        Also provide a comprehensive 'idealAnswer' that demonstrates expert-level knowledge.`;
 
         const response: GenerateContentResponse = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3-pro-preview",
           contents: prompt,
           config: {
+            thinkingConfig: { thinkingBudget: 2000 },
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -207,12 +219,23 @@ export const geminiService = {
   validateCode: async (problem: string, language: string, code: string) => {
     return callWithRetry(async () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Review code for problem: "${problem}". Language: ${language}. Code: "${code}".`;
+      const prompt = `Perform a deep code review and complexity analysis for the following solution.
+      Problem: "${problem}"
+      Language: ${language}
+      Code: "${code}"
+      
+      Analyze for:
+      - Logical correctness
+      - Time and Space Complexity (Big O)
+      - Code efficiency and edge case handling.
+      
+      Provide a score (0-100) and an optimal version of the solution.`;
       try {
         const response: GenerateContentResponse = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3-pro-preview",
           contents: prompt,
           config: {
+            thinkingConfig: { thinkingBudget: 2000 },
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -243,13 +266,24 @@ export const geminiService = {
   analyzeResume: async (resumeText: string, targetJob: string): Promise<ResumeAnalysis> => {
     return callWithRetry(async () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Analyze the following resume text.`;
+      const prompt = `Analyze the following resume text specifically for the target role: "${targetJob}".
+      
+      Resume Content:
+      ${resumeText}
+      
+      Instructions:
+      1. Calculate an ATS compatibility score.
+      2. Identify missing technical or soft skills crucial for the role.
+      3. Suggest specific bullet point improvements for impact.
+      4. List 3 alternative job titles that match the candidate's current profile.
+      5. Provide a professional summary of the candidate's trajectory.`;
 
       try {
         const response: GenerateContentResponse = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3-pro-preview",
           contents: prompt,
           config: {
+            thinkingConfig: { thinkingBudget: 2000 },
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,

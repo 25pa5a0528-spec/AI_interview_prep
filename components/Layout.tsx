@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { LayoutDashboard, MessageSquare, Code, FileText, Trophy, User, Flame, LogOut, Briefcase, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Code, FileText, Trophy, User, Flame, LogOut, Briefcase, PlusCircle, Zap } from 'lucide-react';
 import { UserRole } from '../types';
 import { storageService } from '../services/storageService';
 
@@ -35,9 +36,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, stre
       {/* Top Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black">H</div>
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+            <Zap size={18} fill="currentColor" />
+          </div>
           <h1 className="text-xl font-bold text-indigo-600 flex items-center gap-2">
-            HirePulse <span className="text-xs bg-indigo-100 px-2 py-0.5 rounded">{role === UserRole.RECRUITER ? 'Recruiter' : 'AI'}</span>
+            HirePulse <span className="text-[10px] bg-indigo-100 px-2 py-0.5 rounded text-indigo-600 font-black uppercase tracking-widest">{role === UserRole.RECRUITER ? 'Recruiter' : 'AI'}</span>
           </h1>
         </div>
         
