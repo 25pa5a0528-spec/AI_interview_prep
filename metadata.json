@@ -1,0 +1,7 @@
+{
+  "name": "HirePulse AI - Pro Interview Prep",
+  "description": "An advanced AI-powered interview preparation platform featuring mock interviews, coding challenges, resume analysis, and real-time feedback.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
